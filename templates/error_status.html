@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate System Debug Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .debug-section {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+        }
+        .status-good {
+            color: green;
+        }
+        .status-bad {
+            color: red;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .refresh {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Certificate System Debug Page</h1>
+    
+    <div class="debug-section">
+        <h2>Environment Information</h2>
+        <ul>
+            <li>Flask App Running: <span class="status-good">Yes</span></li>
+            <li>Python Version: {{ python_version }}</li>
+            <li>Required Environment Variables:
+                <ul>
+                    <li>SHEET_ID: {% if env.SHEET_ID %}<span class="status-good">Set</span>{% else %}<span class="status-bad">Missing</span>{% endif %}</li>
+                    <li>GOOGLE_CREDENTIALS_JSON_BASE64: {% if env.GOOGLE_CREDENTIALS_JSON_BASE64 %}<span class="status-good">Set</span>{% else %}<span class="status-bad">Missing</span>{% endif %}</li>
+                    <li>EMAIL_ADDRESS: {% if env.EMAIL_ADDRESS %}<span class="status-good">Set</span>{% else %}<span class="status-bad">Missing</span>{% endif %}</li>
+                    <li>EMAIL_PASSWORD: {% if env.EMAIL_PASSWORD %}<span class="status-good">Set (value hidden)</span>{% else %}<span class="status-bad">Missing</span>{% endif %}</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Google Sheets Connection</h2>
+        {% if sheets_error %}
+            <p class="error">Error connecting to Google Sheets:</p>
+            <pre>{{ sheets_error }}</pre>
+        {% else %}
+            <p class="status-good">Successfully connected to Google Sheets</p>
+            <p>Sheet ID: {{ sheet_id }}</p>
+            <p>Total rows found: {{ row_count }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="debug-section">
+        <h2>PDF Generation</h2>
+        {% if pdf_error %}
+            <p class="error">Error with PDF generation:</p>
+            <pre>{{ pdf_error }}</pre>
+            <p>wkhtmltopdf path: {{ wkhtmltopdf_path }}</p>
+            <p>wkhtmltopdf exists: {{ wkhtmltopdf_exists }}</p>
+        {% else %}
+            <p class="status-good">PDF generation environment appears correctly set up</p>
+        {% endif %}
+    </div>
+    
+    <div class="debug-section">
+        <h2>Email Configuration</h2>
+        {% if email_error %}
+            <p class="error">Error with email configuration:</p>
+            <pre>{{ email_error }}</pre>
+        {% else %}
+            <p class="status-good">Email configuration appears correct</p>
+            <ul>
+                <li>SMTP Server: {{ smtp_server }}</li>
+                <li>SMTP Port: {{ smtp_port }}</li>
+                <li>From Email: {{ from_email }}</li>
+            </ul>
+        {% endif %}
+    </div>
+
+    {% if submissions %}
+    <div class="debug-section">
+        <h2>Recent Submissions ({{ submissions|length }})</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Course</th>
+                    <th>Status</th>
+                    <th>Processed At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in submissions %}
+                <tr>
+                    <td>{{ entry.timestamp }}</td>
+                    <td>{{ entry.name }}</td>
+                    <td>{{ entry.email }}</td>
+                    <td>{{ entry.course }}</td>
+                    <td>{{ entry.status }}</td>
+                    <td>{{ entry.processed_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    <div class="refresh">
+        <button onclick="location.reload()">Refresh Status</button>
+        <p>Auto-refreshes every 30 seconds</p>
+    </div>
+
+    <script>
+        // Auto-refresh the page every 30 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>
